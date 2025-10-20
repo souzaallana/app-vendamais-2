@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Download Projeto</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>Download do Projeto</h1>
+    <p>Clique no botão para baixar todos os arquivos:</p>
+    <button onclick="downloadProject()">Baixar Projeto Completo</button>
+    
+    <script>
+    async function downloadProject() {
+        const response = await fetch('/meu-projeto-completo.tar.gz');
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'meu-projeto.tar.gz';
+        a.click();
+    }
+    </script>
+</body>
+</html>
