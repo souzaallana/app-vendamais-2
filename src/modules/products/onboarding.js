@@ -72,33 +72,35 @@ export function renderOnboardingScreen() {
 }
 
 export function setupOnboardingListeners() {
-  console.log('Setting up onboarding listeners');
+  console.log('Setting up onboarding listeners with delegation');
 
-  setTimeout(() => {
-    const closeBtn = document.getElementById('closeOnboarding');
-    const startBtn = document.getElementById('startPhotoCapture');
+  const app = document.getElementById('app');
 
-    console.log('Close button:', closeBtn);
-    console.log('Start button:', startBtn);
+  if (!app) {
+    console.error('App element not found');
+    return;
+  }
 
-    if (closeBtn) {
-      closeBtn.addEventListener('click', (e) => {
-        console.log('Close button clicked');
-        e.preventDefault();
-        e.stopPropagation();
-        router.navigate('/products');
-      });
+  const handleClick = (e) => {
+    const target = e.target.closest('#startPhotoCapture');
+    if (target) {
+      console.log('Start button clicked via delegation');
+      e.preventDefault();
+      e.stopPropagation();
+      router.navigate('/products/capture');
+      return;
     }
 
-    if (startBtn) {
-      startBtn.addEventListener('click', (e) => {
-        console.log('Start button clicked, navigating to /products/capture');
-        e.preventDefault();
-        e.stopPropagation();
-        router.navigate('/products/capture');
-      });
-    } else {
-      console.error('Start button not found!');
+    const closeTarget = e.target.closest('#closeOnboarding');
+    if (closeTarget) {
+      console.log('Close button clicked via delegation');
+      e.preventDefault();
+      e.stopPropagation();
+      router.navigate('/products');
+      return;
     }
-  }, 100);
+  };
+
+  app.addEventListener('click', handleClick);
+  console.log('Event delegation set up on app element');
 }
