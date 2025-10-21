@@ -2,20 +2,8 @@ import { i18n } from '../../services/i18n.js';
 import { authService } from '../../services/supabase.js';
 import { router } from '../../services/router.js';
 import { showSnackbar, validateEmail, validatePassword } from '../../utils/helpers.js';
-import { createOnboardingScreen } from './onboarding.js';
 
 export async function createLoginScreen() {
-  const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
-
-  if (!hasSeenOnboarding) {
-    const onboarding = createOnboardingScreen(() => {
-      localStorage.setItem('hasSeenOnboarding', 'true');
-      document.querySelector('#app').innerHTML = '';
-      document.querySelector('#app').appendChild(createActualLoginScreen());
-    });
-    return onboarding;
-  }
-
   return createActualLoginScreen();
 }
 
