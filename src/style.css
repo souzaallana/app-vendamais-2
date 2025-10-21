@@ -533,7 +533,9 @@ img {
 .onboarding-content {
   flex: 1;
   padding: var(--spacing-6) var(--spacing-4);
+  padding-bottom: 120px;
   background: var(--bg-white);
+  overflow-y: auto;
 }
 
 .onboarding-section {
@@ -597,9 +599,12 @@ img {
 }
 
 .onboarding-footer {
+  position: sticky;
+  bottom: 0;
   padding: var(--spacing-4);
   background: var(--bg-white);
   border-top: 1px solid var(--border-gray);
+  z-index: 100;
 }
 
 /* Photo Capture Styles */
