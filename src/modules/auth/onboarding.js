@@ -7,11 +7,12 @@ export function createOnboardingScreen(onComplete) {
     <style>
       .onboarding-screen {
         width: 100%;
-        min-height: 100vh;
+        height: 100vh;
         display: flex;
         flex-direction: column;
         background: white;
-        padding: var(--spacing-8) var(--spacing-6);
+        padding: var(--spacing-4) var(--spacing-6);
+        overflow: hidden;
       }
 
       .onboarding-skip {
@@ -31,41 +32,42 @@ export function createOnboardingScreen(onComplete) {
         align-items: center;
         justify-content: center;
         text-align: center;
-        padding: var(--spacing-6) 0;
+        padding: var(--spacing-2) 0;
+        overflow-y: auto;
       }
 
       .onboarding-video {
         width: 100%;
-        max-width: 500px;
+        max-width: 400px;
         aspect-ratio: 16/9;
         background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         border-radius: var(--border-radius-xl);
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: var(--spacing-8);
+        margin-bottom: var(--spacing-4);
         box-shadow: 0 20px 40px rgba(0,0,0,0.1);
       }
 
       .onboarding-video-icon {
-        width: 80px;
-        height: 80px;
+        width: 60px;
+        height: 60px;
         color: rgba(255,255,255,0.5);
       }
 
       .onboarding-title {
-        font-size: 32px;
+        font-size: 26px;
         font-weight: 700;
         color: var(--text-primary);
-        margin-bottom: var(--spacing-4);
+        margin-bottom: var(--spacing-3);
         line-height: 1.2;
       }
 
       .onboarding-features {
         display: flex;
         flex-direction: column;
-        gap: var(--spacing-4);
-        margin: var(--spacing-8) 0;
+        gap: var(--spacing-3);
+        margin: var(--spacing-4) 0;
         text-align: left;
         width: 100%;
         max-width: 400px;
@@ -80,32 +82,32 @@ export function createOnboardingScreen(onComplete) {
       }
 
       .onboarding-feature-icon {
-        width: 48px;
-        height: 48px;
+        width: 40px;
+        height: 40px;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #2563EB 0%, #A9208D 100%);
         border-radius: 12px;
         flex-shrink: 0;
       }
 
       .onboarding-feature-icon svg {
-        width: 24px;
-        height: 24px;
+        width: 20px;
+        height: 20px;
         color: white;
       }
 
       .onboarding-actions {
         width: 100%;
         max-width: 400px;
-        padding: var(--spacing-6) 0;
+        padding: var(--spacing-3) 0 var(--spacing-2) 0;
       }
 
       .onboarding-cta {
         width: 100%;
-        padding: var(--spacing-5);
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: var(--spacing-4);
+        background: linear-gradient(135deg, #2563EB 0%, #A9208D 100%);
         color: white;
         border: none;
         border-radius: var(--border-radius-lg);
