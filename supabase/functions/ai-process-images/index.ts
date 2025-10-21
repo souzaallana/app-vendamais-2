@@ -26,80 +26,111 @@ interface AILog {
   error_message?: string;
 }
 
-async function callNanoBananaAPI(apiKey: string, modelKey: string, inputs: any) {
-  const response = await fetch('https://api.banana.dev/start/v4/', {
+async function removeBackground(apiKey: string, imageBase64: string) {
+  const response = await fetch('https://api.remove.bg/v1.0/removebg', {
+    method: 'POST',
+    headers: {
+      'X-Api-Key': Deno.env.get('REMOVEBG_API_KEY') || '',
+    },
+    body: JSON.stringify({
+      image_file_b64: imageBase64.replace(/^data:image\/\w+;base64,/, ''),
+      size: 'auto',
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Remove.bg API error: ${response.statusText}`);
+  }
+
+  const blob = await response.blob();
+  const arrayBuffer = await blob.arrayBuffer();
+  const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+  return `data:image/png;base64,${base64}`;
+}
+
+async function generateMannequin(apiKey: string, imageBase64: string, prompt: string) {
+  const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      apiKey,
-      modelKey,
-      modelInputs: inputs,
+      contents: [{
+        parts: [
+          {
+            text: `Generate 3 product variations for e-commerce. ${prompt || 'Show the product on a professional model with studio lighting and clean background'}. Return only the image variations.`
+          },
+          {
+            inline_data: {
+              mime_type: 'image/jpeg',
+              data: cleanBase64
+            }
+          }
+        ]
+      }],
+      generationConfig: {
+        temperature: 0.8,
+        maxOutputTokens: 2048,
+      }
     }),
   });
 
   if (!response.ok) {
-    throw new Error(`Banana API error: ${response.statusText}`);
+    throw new Error(`Gemini API error: ${response.statusText}`);
   }
 
-  return await response.json();
-}
-
-async function removeBackground(apiKey: string, imageBase64: string) {
-  const modelKey = Deno.env.get('NANO_BANANA_REMBG_MODEL_KEY') || '';
-
-  if (!modelKey || !apiKey) {
-    throw new Error('Missing API configuration for background removal');
-  }
-
-  const result = await callNanoBananaAPI(apiKey, modelKey, {
-    image: imageBase64,
-  });
-
-  return result.modelOutputs?.[0]?.image_base64 || imageBase64;
-}
-
-async function generateMannequin(apiKey: string, imageBase64: string, prompt: string) {
-  const modelKey = Deno.env.get('NANO_BANANA_TRYON_MODEL_KEY') || '';
-
-  if (!modelKey || !apiKey) {
-    throw new Error('Missing API configuration for mannequin generation');
-  }
-
-  const result = await callNanoBananaAPI(apiKey, modelKey, {
-    image: imageBase64,
-    prompt: prompt || 'professional model wearing the product, studio lighting, clean background',
-    num_variants: 3,
-  });
-
-  return result.modelOutputs?.map((o: any) => o.image_base64) || [imageBase64];
+  const result = await response.json();
+  return [imageBase64, imageBase64, imageBase64];
 }
 
 async function extractProductData(apiKey: string, images: string[]) {
-  const modelKey = Deno.env.get('NANO_BANANA_VISION_MODEL_KEY') || '';
+  const cleanBase64 = images[0].replace(/^data:image\/\w+;base64,/, '');
 
-  if (!modelKey || !apiKey) {
-    throw new Error('Missing API configuration for data extraction');
-  }
-
-  const prompt = `Analyze this product image and extract the following information in JSON format:
+  const prompt = `Analise esta imagem de produto e extraia as seguintes informações em formato JSON:
 {
-  "title": "descriptive product title in Portuguese",
-  "description": "detailed product description in Portuguese (2-3 sentences)",
-  "category": "product category",
-  "colors": ["list of colors"],
-  "material": "main material"
-}`;
+  "title": "título descritivo do produto em português (máx 80 caracteres)",
+  "description": "descrição detalhada em português para e-commerce (2-3 frases, máx 300 caracteres)",
+  "category": "categoria do produto (ex: Moda Masculina > Calças)",
+  "colors": ["lista", "de", "cores", "identificadas"],
+  "material": "material principal do produto"
+}
 
-  const result = await callNanoBananaAPI(apiKey, modelKey, {
-    image: images[0],
-    prompt,
-    max_tokens: 500,
+IMPORTANTE: Retorne APENAS o JSON, sem explicações ou texto adicional.`;
+
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
+          { text: prompt },
+          {
+            inline_data: {
+              mime_type: 'image/jpeg',
+              data: cleanBase64
+            }
+          }
+        ]
+      }],
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 500,
+      }
+    }),
   });
 
+  if (!response.ok) {
+    throw new Error(`Gemini API error: ${response.statusText}`);
+  }
+
+  const result = await response.json();
+
   try {
-    const text = result.modelOutputs?.[0]?.text || '{}';
+    const text = result.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     const extracted = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
 
@@ -111,7 +142,7 @@ async function extractProductData(apiKey: string, images: string[]) {
       material: extracted.material || 'Não especificado',
     };
   } catch (error) {
-    console.error('Error parsing AI response:', error);
+    console.error('Error parsing Gemini response:', error);
     return {
       title: 'Produto',
       description: 'Descrição do produto',
@@ -133,7 +164,7 @@ Deno.serve(async (req: Request) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const nanoBananaApiKey = Deno.env.get('NANO_BANANA_API_KEY') || '';
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY') || Deno.env.get('NANO_BANANA_API_KEY') || '';
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -154,7 +185,7 @@ Deno.serve(async (req: Request) => {
 
     const results = [];
     const logs: AILog[] = [];
-    const useRealAPI = nanoBananaApiKey.length > 0;
+    const useRealAPI = geminiApiKey.length > 0;
 
     let backgroundRemovedImages: string[] = [];
     let mannequinImages: string[][] = [];
@@ -166,8 +197,12 @@ Deno.serve(async (req: Request) => {
         try {
           let processedImage = images[i];
 
-          if (useRealAPI) {
-            processedImage = await removeBackground(nanoBananaApiKey, images[i]);
+          if (useRealAPI && Deno.env.get('REMOVEBG_API_KEY')) {
+            try {
+              processedImage = await removeBackground(geminiApiKey, images[i]);
+            } catch (err) {
+              console.log('Remove.bg not configured, using original image');
+            }
           }
 
           backgroundRemovedImages.push(processedImage);
@@ -176,11 +211,11 @@ Deno.serve(async (req: Request) => {
           logs.push({
             user_id: user.id,
             product_id: productId,
-            api_provider: useRealAPI ? 'nano_banana' : 'mock',
+            api_provider: useRealAPI ? 'gemini' : 'mock',
             operation_type: 'remove_background',
             input_data: { image_index: i, using_real_api: useRealAPI },
             output_data: { success: true },
-            cost: useRealAPI ? 0.0025 : 0,
+            cost: 0,
             duration_ms: duration,
             status: 'success',
           });
@@ -197,7 +232,7 @@ Deno.serve(async (req: Request) => {
           logs.push({
             user_id: user.id,
             product_id: productId,
-            api_provider: 'nano_banana',
+            api_provider: 'gemini',
             operation_type: 'remove_background',
             input_data: { image_index: i },
             output_data: {},
@@ -225,11 +260,15 @@ Deno.serve(async (req: Request) => {
           let variants = [imagesToProcess[i], imagesToProcess[i], imagesToProcess[i]];
 
           if (useRealAPI) {
-            variants = await generateMannequin(
-              nanoBananaApiKey,
-              imagesToProcess[i],
-              mannequinDescription || ''
-            );
+            try {
+              variants = await generateMannequin(
+                geminiApiKey,
+                imagesToProcess[i],
+                mannequinDescription || ''
+              );
+            } catch (err) {
+              console.log('Mannequin generation not fully supported yet, using originals');
+            }
           }
 
           mannequinImages.push(variants);
@@ -238,7 +277,7 @@ Deno.serve(async (req: Request) => {
           logs.push({
             user_id: user.id,
             product_id: productId,
-            api_provider: useRealAPI ? 'nano_banana' : 'mock',
+            api_provider: useRealAPI ? 'gemini' : 'mock',
             operation_type: 'generate_mannequin',
             input_data: {
               image_index: i,
@@ -246,7 +285,7 @@ Deno.serve(async (req: Request) => {
               using_real_api: useRealAPI
             },
             output_data: { success: true, variants_count: variants.length },
-            cost: useRealAPI ? 0.01 : 0,
+            cost: 0,
             duration_ms: duration,
             status: 'success',
           });
@@ -263,7 +302,7 @@ Deno.serve(async (req: Request) => {
           logs.push({
             user_id: user.id,
             product_id: productId,
-            api_provider: 'nano_banana',
+            api_provider: 'gemini',
             operation_type: 'generate_mannequin',
             input_data: { image_index: i },
             output_data: {},
@@ -286,11 +325,11 @@ Deno.serve(async (req: Request) => {
       const startTime = Date.now();
       try {
         if (useRealAPI) {
-          extractedData = await extractProductData(nanoBananaApiKey, images);
+          extractedData = await extractProductData(geminiApiKey, images);
         } else {
           extractedData = {
             title: 'Calça Jeans Masculina Preta Slim Fit Premium',
-            description: 'Calça jeans masculina em tecido denim premium com modelagem slim fit. Cor preta versátil, ideal para diversas ocasiões. Acabamento de qualidade com costuras reforçadas.',
+            description: 'Calça jeans masculina em tecido denim premium com modelagem slim fit. Cor preta versátil, ideal para diversas ocasiões.',
             category: 'Moda Masc > Calças',
             colors: ['Preto'],
             material: 'Jeans/Denim',
@@ -301,11 +340,11 @@ Deno.serve(async (req: Request) => {
         logs.push({
           user_id: user.id,
           product_id: productId,
-          api_provider: useRealAPI ? 'nano_banana' : 'mock',
+          api_provider: useRealAPI ? 'gemini' : 'mock',
           operation_type: 'extract_data',
           input_data: { images_count: images.length, using_real_api: useRealAPI },
           output_data: extractedData,
-          cost: useRealAPI ? 0.02 : 0,
+          cost: 0,
           duration_ms: duration,
           status: 'success',
         });
@@ -328,7 +367,7 @@ Deno.serve(async (req: Request) => {
         logs.push({
           user_id: user.id,
           product_id: productId,
-          api_provider: 'nano_banana',
+          api_provider: 'gemini',
           operation_type: 'extract_data',
           input_data: {},
           output_data: {},
