@@ -1,5 +1,5 @@
 import { i18n } from '../../services/i18n.js';
-import { navigateTo } from '../../services/router.js';
+import { router } from '../../services/router.js';
 
 export function renderOnboardingScreen() {
   return `
@@ -77,13 +77,17 @@ export function setupOnboardingListeners() {
 
   if (closeBtn) {
     closeBtn.addEventListener('click', () => {
-      navigateTo('/products');
+      console.log('Close button clicked');
+      router.navigate('/products');
     });
   }
 
   if (startBtn) {
     startBtn.addEventListener('click', () => {
-      navigateTo('/products/capture');
+      console.log('Start button clicked, navigating to /products/capture');
+      router.navigate('/products/capture');
     });
+  } else {
+    console.error('Start button not found!');
   }
 }
