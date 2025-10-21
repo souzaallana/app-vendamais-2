@@ -58,57 +58,43 @@ async function init() {
 
   router.register('/products/onboarding', async () => {
     const html = renderOnboardingScreen();
-    const app = document.getElementById('app');
-    app.innerHTML = html;
-    setupOnboardingListeners();
+    setTimeout(() => setupOnboardingListeners(), 0);
     return html;
   });
 
   router.register('/products/capture', async () => {
     const html = renderPhotoCapture();
-    const app = document.getElementById('app');
-    app.innerHTML = html;
-    setupPhotoCaptureListeners();
+    setTimeout(() => setupPhotoCaptureListeners(), 0);
     return html;
   });
 
   router.register('/products/processing', async () => {
     const html = renderProcessingScreen();
-    const app = document.getElementById('app');
-    app.innerHTML = html;
-    startProcessing();
+    setTimeout(() => startProcessing(), 0);
     return html;
   });
 
   router.register('/products/image-selection', async () => {
     const html = renderImageSelection();
-    const app = document.getElementById('app');
-    app.innerHTML = html;
-    setupImageSelectionListeners();
+    setTimeout(() => setupImageSelectionListeners(), 0);
     return html;
   });
 
   router.register('/products/image-edit', async () => {
     const html = renderImageEdit();
-    const app = document.getElementById('app');
-    app.innerHTML = html;
-    setupImageEditListeners();
+    setTimeout(() => setupImageEditListeners(), 0);
     return html;
   });
 
   router.register('/products/review', async () => {
     const html = renderReview();
-    const app = document.getElementById('app');
-    app.innerHTML = html;
-    setupReviewListeners();
+    setTimeout(() => setupReviewListeners(), 0);
     return html;
   });
 
   router.register('/products/success', async () => {
     const html = renderSuccess();
-    const app = document.getElementById('app');
-    app.innerHTML = html;
-    setupSuccessListeners();
+    setTimeout(() => setupSuccessListeners(), 0);
     return html;
   });
 

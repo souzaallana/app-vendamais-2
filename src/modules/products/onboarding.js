@@ -2,9 +2,6 @@ import { i18n } from '../../services/i18n.js';
 import { router } from '../../services/router.js';
 
 export function renderOnboardingScreen() {
-  console.log('Rendering onboarding, language:', i18n.getLanguage());
-  console.log('Translation test:', i18n.t('onboarding_title'));
-
   return `
     <div class="onboarding-container">
       <div class="onboarding-header">
