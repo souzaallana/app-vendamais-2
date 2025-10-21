@@ -60,6 +60,10 @@ class Router {
 
 export const router = new Router();
 
+export function navigateTo(path, params = {}) {
+  return router.navigate(path, params);
+}
+
 window.addEventListener('popstate', (event) => {
   if (event.state && event.state.path) {
     router.navigate(event.state.path, event.state.params || {});

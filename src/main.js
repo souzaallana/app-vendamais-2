@@ -2,7 +2,7 @@ import './style.css';
 import { router } from './services/router.js';
 import { authService } from './services/supabase.js';
 import { i18n } from './services/i18n.js';
-import { createSplashScreen } from './modules/auth/splash.js';
+import { createSplashScreen, hideSplashScreen } from './modules/auth/splash.js';
 import { createLoginScreen } from './modules/auth/login.js';
 import { createHomeScreen } from './modules/home/home.js';
 import { createProductsListScreen } from './modules/products/products-list.js';
@@ -10,6 +10,13 @@ import { createHelpScreen } from './modules/help/help.js';
 import { createProfileScreen } from './modules/profile/profile.js';
 import './modules/registration/registration-flow.js';
 import { updateNavbarLanguage } from './utils/navbar.js';
+import { renderOnboardingScreen, setupOnboardingListeners } from './modules/products/onboarding.js';
+import { renderPhotoCapture, setupPhotoCaptureListeners } from './modules/products/photo-capture.js';
+import { renderProcessingScreen, startProcessing } from './modules/products/processing.js';
+import { renderImageSelection, setupImageSelectionListeners } from './modules/products/image-selection.js';
+import { renderImageEdit, setupImageEditListeners } from './modules/products/image-edit.js';
+import { renderReview, setupReviewListeners } from './modules/products/review.js';
+import { renderSuccess, setupSuccessListeners } from './modules/products/success.js';
 
 async function init() {
   const app = document.getElementById('app');
@@ -48,6 +55,62 @@ async function init() {
   router.register('/products', createProductsListScreen);
   router.register('/help', createHelpScreen);
   router.register('/profile', createProfileScreen);
+
+  router.register('/products/onboarding', async () => {
+    const html = renderOnboardingScreen();
+    const app = document.getElementById('app');
+    app.innerHTML = html;
+    setupOnboardingListeners();
+    return html;
+  });
+
+  router.register('/products/capture', async () => {
+    const html = renderPhotoCapture();
+    const app = document.getElementById('app');
+    app.innerHTML = html;
+    setupPhotoCaptureListeners();
+    return html;
+  });
+
+  router.register('/products/processing', async () => {
+    const html = renderProcessingScreen();
+    const app = document.getElementById('app');
+    app.innerHTML = html;
+    startProcessing();
+    return html;
+  });
+
+  router.register('/products/image-selection', async () => {
+    const html = renderImageSelection();
+    const app = document.getElementById('app');
+    app.innerHTML = html;
+    setupImageSelectionListeners();
+    return html;
+  });
+
+  router.register('/products/image-edit', async () => {
+    const html = renderImageEdit();
+    const app = document.getElementById('app');
+    app.innerHTML = html;
+    setupImageEditListeners();
+    return html;
+  });
+
+  router.register('/products/review', async () => {
+    const html = renderReview();
+    const app = document.getElementById('app');
+    app.innerHTML = html;
+    setupReviewListeners();
+    return html;
+  });
+
+  router.register('/products/success', async () => {
+    const html = renderSuccess();
+    const app = document.getElementById('app');
+    app.innerHTML = html;
+    setupSuccessListeners();
+    return html;
+  });
 
   window.addEventListener('languageChange', () => {
     updateNavbarLanguage();

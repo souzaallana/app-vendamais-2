@@ -130,7 +130,7 @@ export function openRegisterModal() {
   content.querySelectorAll('.register-option:not(.disabled)').forEach(option => {
     option.addEventListener('click', () => {
       modal.close();
-      startPhotoFlow();
+      router.navigate('/products/onboarding');
     });
   });
 
