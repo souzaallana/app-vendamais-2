@@ -75,22 +75,33 @@ export function renderOnboardingScreen() {
 }
 
 export function setupOnboardingListeners() {
-  const closeBtn = document.getElementById('closeOnboarding');
-  const startBtn = document.getElementById('startPhotoCapture');
+  console.log('Setting up onboarding listeners');
 
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
-      console.log('Close button clicked');
-      router.navigate('/products');
-    });
-  }
+  setTimeout(() => {
+    const closeBtn = document.getElementById('closeOnboarding');
+    const startBtn = document.getElementById('startPhotoCapture');
 
-  if (startBtn) {
-    startBtn.addEventListener('click', () => {
-      console.log('Start button clicked, navigating to /products/capture');
-      router.navigate('/products/capture');
-    });
-  } else {
-    console.error('Start button not found!');
-  }
+    console.log('Close button:', closeBtn);
+    console.log('Start button:', startBtn);
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        console.log('Close button clicked');
+        e.preventDefault();
+        e.stopPropagation();
+        router.navigate('/products');
+      });
+    }
+
+    if (startBtn) {
+      startBtn.addEventListener('click', (e) => {
+        console.log('Start button clicked, navigating to /products/capture');
+        e.preventDefault();
+        e.stopPropagation();
+        router.navigate('/products/capture');
+      });
+    } else {
+      console.error('Start button not found!');
+    }
+  }, 100);
 }
