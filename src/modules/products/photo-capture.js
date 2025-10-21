@@ -31,6 +31,17 @@ export function renderPhotoCapture() {
           ${i18n.t('photo_capture_instruction')}
         </p>
 
+        <div style="display: flex; gap: var(--spacing-3); margin-bottom: var(--spacing-4);">
+          <button id="openCamera" class="btn btn-primary" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span style="font-size: 20px;">📸</span>
+            ${i18n.t('photo_capture_camera') || 'Câmera'}
+          </button>
+          <button id="openGallery" class="btn btn-outline" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span style="font-size: 20px;">🖼️</span>
+            ${i18n.t('photo_capture_gallery') || 'Galeria'}
+          </button>
+        </div>
+
         <div class="photo-grid">
           ${renderPhotoSlot('frente', 0)}
           ${renderPhotoSlot('verso', 1)}
@@ -83,7 +94,8 @@ export function renderPhotoCapture() {
       </div>
     </div>
 
-    <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
+    <input type="file" id="fileInputCamera" accept="image/*" capture="environment" style="display: none;">
+    <input type="file" id="fileInputGallery" accept="image/*" multiple style="display: none;">
   `;
 }
 
@@ -113,119 +125,160 @@ function renderPhotoSlot(type, index) {
   `;
 }
 
-export function setupPhotoCaptureListeners() {
-  const backBtn = document.getElementById('backFromCapture');
-  const closeBtn = document.getElementById('closeCapture');
-  const processAIBtn = document.getElementById('processWithAI');
-  const processManualBtn = document.getElementById('processManual');
-  const fileInput = document.getElementById('fileInput');
-  const uploadBtn = document.getElementById('uploadBtn');
-  const descInput = document.getElementById('mannequinDescription');
-  const showExamplesLink = document.getElementById('showExamples');
+let currentSlotType = 'outros';
 
-  if (backBtn) {
-    backBtn.addEventListener('click', () => {
-      navigateTo('/products/onboarding');
-    });
+export function setupPhotoCaptureListeners() {
+  console.log('Setting up photo capture listeners');
+
+  const app = document.getElementById('app');
+  const fileInputCamera = document.getElementById('fileInputCamera');
+  const fileInputGallery = document.getElementById('fileInputGallery');
+
+  if (!app) {
+    console.error('App element not found');
+    return;
   }
 
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
+  const handleClick = (e) => {
+    if (e.target.closest('#backFromCapture')) {
+      console.log('Back button clicked');
+      e.preventDefault();
+      navigateTo('/products/onboarding');
+      return;
+    }
+
+    if (e.target.closest('#closeCapture')) {
+      console.log('Close button clicked');
+      e.preventDefault();
       photoState.photos = [];
       photoState.mannequinDescription = '';
       navigateTo('/products');
-    });
-  }
+      return;
+    }
 
-  if (showExamplesLink) {
-    showExamplesLink.addEventListener('click', (e) => {
+    if (e.target.closest('#showExamples')) {
+      console.log('Show examples clicked');
       e.preventDefault();
       navigateTo('/products/onboarding');
-    });
-  }
-
-  if (descInput) {
-    descInput.addEventListener('input', (e) => {
-      photoState.mannequinDescription = e.target.value;
-    });
-  }
-
-  if (uploadBtn) {
-    uploadBtn.addEventListener('click', () => {
-      fileInput.click();
-    });
-  }
-
-  document.querySelectorAll('.photo-slot').forEach(slot => {
-    const type = slot.dataset.type;
-    const existingPhoto = photoState.photos.find(p => p.type === type);
-
-    if (!existingPhoto) {
-      slot.addEventListener('click', () => {
-        currentSlotType = type;
-        fileInput.click();
-      });
+      return;
     }
-  });
 
-  document.querySelectorAll('.photo-slot-delete').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    if (e.target.closest('#openCamera')) {
+      console.log('Open camera clicked');
+      e.preventDefault();
+      currentSlotType = 'outros';
+      fileInputCamera?.click();
+      return;
+    }
+
+    if (e.target.closest('#openGallery')) {
+      console.log('Open gallery clicked');
+      e.preventDefault();
+      currentSlotType = 'outros';
+      fileInputGallery?.click();
+      return;
+    }
+
+    if (e.target.closest('#uploadBtn')) {
+      console.log('Upload button clicked');
+      e.preventDefault();
+      fileInputGallery?.click();
+      return;
+    }
+
+    const deleteBtn = e.target.closest('.photo-slot-delete');
+    if (deleteBtn) {
+      console.log('Delete button clicked');
+      e.preventDefault();
       e.stopPropagation();
-      const photoId = btn.dataset.photoId;
+      const photoId = deleteBtn.dataset.photoId;
       photoState.photos = photoState.photos.filter(p => p.id !== photoId);
       navigateTo('/products/capture');
-    });
-  });
+      return;
+    }
 
-  let currentSlotType = 'outros';
+    const photoSlot = e.target.closest('.photo-slot');
+    if (photoSlot) {
+      const type = photoSlot.dataset.type;
+      const existingPhoto = photoState.photos.find(p => p.type === type);
 
-  if (fileInput) {
-    fileInput.addEventListener('change', (e) => {
-      const files = Array.from(e.target.files);
+      if (!existingPhoto) {
+        console.log('Photo slot clicked:', type);
+        currentSlotType = type;
+        fileInputCamera?.click();
+      }
+      return;
+    }
 
-      files.forEach(file => {
-        if (photoState.photos.length >= photoState.maxPhotos) {
-          return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const photo = {
-            id: Date.now() + Math.random(),
-            type: currentSlotType,
-            url: event.target.result,
-            file: file
-          };
-
-          const existingIndex = photoState.photos.findIndex(p => p.type === currentSlotType);
-          if (existingIndex >= 0) {
-            photoState.photos[existingIndex] = photo;
-          } else {
-            photoState.photos.push(photo);
-          }
-
-          navigateTo('/products/capture');
-        };
-        reader.readAsDataURL(file);
-      });
-
-      fileInput.value = '';
-    });
-  }
-
-  if (processAIBtn) {
-    processAIBtn.addEventListener('click', () => {
+    if (e.target.closest('#processWithAI')) {
+      console.log('Process with AI clicked');
+      e.preventDefault();
       if (photoState.photos.length > 0) {
         navigateTo('/products/processing');
       }
+      return;
+    }
+
+    if (e.target.closest('#processManual')) {
+      console.log('Process manual clicked');
+      e.preventDefault();
+      if (photoState.photos.length > 0) {
+        navigateTo('/products/review');
+      }
+      return;
+    }
+  };
+
+  const handleInput = (e) => {
+    if (e.target.id === 'mannequinDescription') {
+      photoState.mannequinDescription = e.target.value;
+    }
+  };
+
+  const handleFileChange = (e) => {
+    console.log('File input changed');
+    const files = Array.from(e.target.files);
+
+    files.forEach(file => {
+      if (photoState.photos.length >= photoState.maxPhotos) {
+        alert(i18n.t('photo_capture_max_photos') || 'Máximo de 8 fotos atingido');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const photo = {
+          id: Date.now() + Math.random(),
+          type: currentSlotType,
+          url: event.target.result,
+          file: file
+        };
+
+        const existingIndex = photoState.photos.findIndex(p => p.type === currentSlotType);
+        if (existingIndex >= 0) {
+          photoState.photos[existingIndex] = photo;
+        } else {
+          photoState.photos.push(photo);
+        }
+
+        navigateTo('/products/capture');
+      };
+      reader.readAsDataURL(file);
     });
+
+    e.target.value = '';
+  };
+
+  app.addEventListener('click', handleClick);
+  app.addEventListener('input', handleInput);
+
+  if (fileInputCamera) {
+    fileInputCamera.addEventListener('change', handleFileChange);
   }
 
-  if (processManualBtn) {
-    processManualBtn.addEventListener('click', () => {
-      if (photoState.photos.length > 0) {
-        navigateTo('/products/review-manual');
-      }
-    });
+  if (fileInputGallery) {
+    fileInputGallery.addEventListener('change', handleFileChange);
   }
+
+  console.log('Photo capture listeners set up');
 }
