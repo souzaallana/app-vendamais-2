@@ -89,51 +89,60 @@ export function renderReview() {
 }
 
 export function setupReviewListeners() {
-  const backBtn = document.getElementById('backFromReview');
-  const closeBtn = document.getElementById('closeReview');
-  const finishBtn = document.getElementById('finishRegistration');
-  const editTitleBtn = document.getElementById('editTitle');
-  const viewFullLink = document.getElementById('viewFullDescription');
+  console.log('Setting up review listeners');
 
-  if (backBtn) {
-    backBtn.addEventListener('click', () => {
-      navigateTo('/products/image-selection');
-    });
+  const app = document.getElementById('app');
+
+  if (!app) {
+    console.error('App element not found');
+    return;
   }
 
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
-      if (confirm(i18n.t('review_confirm_cancel'))) {
+  const handleClick = async (e) => {
+    if (e.target.closest('#backFromReview')) {
+      console.log('Back button clicked');
+      e.preventDefault();
+      navigateTo('/products/image-selection');
+      return;
+    }
+
+    if (e.target.closest('#closeReview')) {
+      console.log('Close button clicked');
+      e.preventDefault();
+      if (confirm(i18n.t('review_confirm_cancel') || 'Descartar cadastro?')) {
         navigateTo('/products');
       }
-    });
-  }
+      return;
+    }
 
-  if (editTitleBtn) {
-    editTitleBtn.addEventListener('click', () => {
+    if (e.target.closest('#editTitle')) {
+      console.log('Edit title clicked');
+      e.preventDefault();
       const titleEl = document.getElementById('productTitle');
       const currentTitle = titleEl.textContent;
-      const newTitle = prompt(i18n.t('review_edit_title_prompt'), currentTitle);
+      const newTitle = prompt(i18n.t('review_edit_title_prompt') || 'Editar título:', currentTitle);
       if (newTitle && newTitle.trim()) {
         titleEl.textContent = newTitle.trim();
       }
-    });
-  }
+      return;
+    }
 
-  if (viewFullLink) {
-    viewFullLink.addEventListener('click', (e) => {
+    if (e.target.closest('#viewFullDescription')) {
+      console.log('Edit description clicked');
       e.preventDefault();
       const descEl = document.getElementById('productDescription');
       const currentDesc = descEl.textContent;
-      const newDesc = prompt(i18n.t('review_edit_desc_prompt'), currentDesc);
+      const newDesc = prompt(i18n.t('review_edit_desc_prompt') || 'Editar descrição:', currentDesc);
       if (newDesc && newDesc.trim()) {
         descEl.textContent = newDesc.trim();
       }
-    });
-  }
+      return;
+    }
 
-  if (finishBtn) {
-    finishBtn.addEventListener('click', async () => {
+    if (e.target.closest('#finishRegistration')) {
+      console.log('Finish registration clicked');
+      e.preventDefault();
+      const finishBtn = document.getElementById('finishRegistration');
       finishBtn.disabled = true;
       finishBtn.innerHTML = '<span class="loading-spinner" style="width: 20px; height: 20px; border-width: 2px;"></span>';
 
@@ -159,7 +168,7 @@ export function setupReviewListeners() {
           .from('products')
           .insert([productData])
           .select()
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
 
@@ -178,10 +187,14 @@ export function setupReviewListeners() {
 
       } catch (error) {
         console.error('Error saving product:', error);
-        alert(i18n.t('review_save_error'));
+        alert(i18n.t('review_save_error') || 'Erro ao salvar produto');
         finishBtn.disabled = false;
         finishBtn.innerHTML = `<span style="font-size: 20px;">✅</span> ${i18n.t('review_finish')}`;
       }
-    });
-  }
+      return;
+    }
+  };
+
+  app.addEventListener('click', handleClick);
+  console.log('Review listeners set up');
 }

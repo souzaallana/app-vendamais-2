@@ -85,36 +85,58 @@ export function renderImageEdit() {
 }
 
 export function setupImageEditListeners() {
-  const backBtn = document.getElementById('backFromEdit');
-  const deleteBtn = document.getElementById('deleteImage');
-  const reprocessBtn = document.getElementById('reprocessChanges');
+  console.log('Setting up image edit listeners');
 
-  if (backBtn) {
-    backBtn.addEventListener('click', () => {
-      navigateTo('/products/image-selection');
-    });
+  const app = document.getElementById('app');
+
+  if (!app) {
+    console.error('App element not found');
+    return;
   }
 
-  if (deleteBtn) {
-    deleteBtn.addEventListener('click', () => {
-      if (confirm(i18n.t('edit_confirm_delete'))) {
+  const handleClick = (e) => {
+    if (e.target.closest('#backFromEdit')) {
+      console.log('Back button clicked');
+      e.preventDefault();
+      navigateTo('/products/image-selection');
+      return;
+    }
+
+    if (e.target.closest('#deleteImage')) {
+      console.log('Delete button clicked');
+      e.preventDefault();
+      if (confirm(i18n.t('edit_confirm_delete') || 'Deseja excluir esta imagem?')) {
         navigateTo('/products/image-selection');
       }
-    });
-  }
+      return;
+    }
 
-  if (reprocessBtn) {
-    reprocessBtn.addEventListener('click', () => {
+    if (e.target.closest('#reprocessChanges')) {
+      console.log('Reprocess button clicked');
+      e.preventDefault();
       navigateTo('/products/image-selection');
-    });
-  }
+      return;
+    }
 
-  document.querySelectorAll('.quick-command-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    if (e.target.closest('#submitEdit')) {
+      console.log('Submit edit clicked');
+      e.preventDefault();
+      navigateTo('/products/image-selection');
+      return;
+    }
+
+    const quickCommandBtn = e.target.closest('.quick-command-btn');
+    if (quickCommandBtn) {
+      console.log('Quick command clicked');
+      e.preventDefault();
       const editInput = document.getElementById('editDescription');
       if (editInput) {
-        editInput.value = btn.textContent;
+        editInput.value = quickCommandBtn.textContent;
       }
-    });
-  });
+      return;
+    }
+  };
+
+  app.addEventListener('click', handleClick);
+  console.log('Image edit listeners set up');
 }

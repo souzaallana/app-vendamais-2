@@ -98,44 +98,55 @@ function renderImageSection(type, title, images) {
 }
 
 export function setupImageSelectionListeners() {
-  const backBtn = document.getElementById('backFromSelection');
-  const closeBtn = document.getElementById('closeSelection');
-  const proceedBtn = document.getElementById('proceedWithSelection');
-  const adjustBtn = document.getElementById('needAdjustment');
+  console.log('Setting up image selection listeners');
 
-  if (backBtn) {
-    backBtn.addEventListener('click', () => {
+  const app = document.getElementById('app');
+
+  if (!app) {
+    console.error('App element not found');
+    return;
+  }
+
+  const handleClick = (e) => {
+    if (e.target.closest('#backFromSelection')) {
+      console.log('Back button clicked');
+      e.preventDefault();
       navigateTo('/products/capture');
-    });
-  }
+      return;
+    }
 
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
+    if (e.target.closest('#closeSelection')) {
+      console.log('Close button clicked');
+      e.preventDefault();
       navigateTo('/products');
-    });
-  }
+      return;
+    }
 
-  if (proceedBtn) {
-    proceedBtn.addEventListener('click', () => {
+    if (e.target.closest('#proceedWithSelection')) {
+      console.log('Proceed button clicked');
+      e.preventDefault();
       const hasSelection = Object.values(selectionState.selectedImages).some(arr => arr.length > 0);
       if (hasSelection) {
         navigateTo('/products/review');
       } else {
-        alert(i18n.t('selection_no_images'));
+        alert(i18n.t('selection_no_images') || 'Selecione ao menos uma imagem');
       }
-    });
-  }
+      return;
+    }
 
-  if (adjustBtn) {
-    adjustBtn.addEventListener('click', () => {
+    if (e.target.closest('#needAdjustment')) {
+      console.log('Adjust button clicked');
+      e.preventDefault();
       navigateTo('/products/image-edit');
-    });
-  }
+      return;
+    }
 
-  document.querySelectorAll('.image-selection-item').forEach(item => {
-    item.addEventListener('click', () => {
-      const type = item.dataset.type;
-      const url = item.dataset.url;
+    const imageItem = e.target.closest('.image-selection-item');
+    if (imageItem) {
+      console.log('Image item clicked');
+      e.preventDefault();
+      const type = imageItem.dataset.type;
+      const url = imageItem.dataset.url;
 
       if (!selectionState.selectedImages[type]) {
         selectionState.selectedImages[type] = [];
@@ -149,6 +160,10 @@ export function setupImageSelectionListeners() {
       }
 
       navigateTo('/products/image-selection');
-    });
-  });
+      return;
+    }
+  };
+
+  app.addEventListener('click', handleClick);
+  console.log('Image selection listeners set up');
 }

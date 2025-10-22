@@ -63,47 +63,68 @@ export function renderSuccess() {
 }
 
 export function setupSuccessListeners() {
-  const shareInstagram = document.getElementById('shareInstagram');
-  const shareWhatsApp = document.getElementById('shareWhatsApp');
-  const shareTikTok = document.getElementById('shareTikTok');
-  const registerAnotherBtn = document.getElementById('registerAnother');
-  const viewProductsBtn = document.getElementById('viewProducts');
-  const backToHomeBtn = document.getElementById('backToHome');
+  console.log('Setting up success listeners');
 
-  if (shareInstagram) {
-    shareInstagram.addEventListener('click', () => {
-      alert(i18n.t('share_instagram_info'));
-    });
+  const app = document.getElementById('app');
+
+  if (!app) {
+    console.error('App element not found');
+    return;
   }
 
-  if (shareWhatsApp) {
-    shareWhatsApp.addEventListener('click', () => {
-      const text = encodeURIComponent(i18n.t('share_whatsapp_text'));
+  const handleClick = (e) => {
+    if (e.target.closest('#shareInstagram')) {
+      console.log('Share Instagram clicked');
+      e.preventDefault();
+      if (navigator.share) {
+        navigator.share({
+          title: i18n.t('share_instagram_title') || 'Confira meu produto!',
+          text: i18n.t('share_instagram_text') || 'Produto cadastrado com VendaMais',
+          url: window.location.href
+        }).catch(err => console.log('Share error:', err));
+      } else {
+        alert(i18n.t('share_instagram_info') || 'Abra o Instagram e compartilhe manualmente');
+      }
+      return;
+    }
+
+    if (e.target.closest('#shareWhatsApp')) {
+      console.log('Share WhatsApp clicked');
+      e.preventDefault();
+      const text = encodeURIComponent(i18n.t('share_whatsapp_text') || 'Produto cadastrado com VendaMais! Confira: ' + window.location.href);
       window.open(`https://wa.me/?text=${text}`, '_blank');
-    });
-  }
+      return;
+    }
 
-  if (shareTikTok) {
-    shareTikTok.addEventListener('click', () => {
-      alert(i18n.t('share_tiktok_info'));
-    });
-  }
+    if (e.target.closest('#shareTikTok')) {
+      console.log('Share TikTok clicked');
+      e.preventDefault();
+      alert(i18n.t('share_tiktok_info') || 'Funcionalidade em breve');
+      return;
+    }
 
-  if (registerAnotherBtn) {
-    registerAnotherBtn.addEventListener('click', () => {
+    if (e.target.closest('#registerAnother')) {
+      console.log('Register another clicked');
+      e.preventDefault();
       navigateTo('/products/onboarding');
-    });
-  }
+      return;
+    }
 
-  if (viewProductsBtn) {
-    viewProductsBtn.addEventListener('click', () => {
+    if (e.target.closest('#viewProducts')) {
+      console.log('View products clicked');
+      e.preventDefault();
       navigateTo('/products');
-    });
-  }
+      return;
+    }
 
-  if (backToHomeBtn) {
-    backToHomeBtn.addEventListener('click', () => {
+    if (e.target.closest('#backToHome')) {
+      console.log('Back to home clicked');
+      e.preventDefault();
       navigateTo('/home');
-    });
-  }
+      return;
+    }
+  };
+
+  app.addEventListener('click', handleClick);
+  console.log('Success listeners set up');
 }
