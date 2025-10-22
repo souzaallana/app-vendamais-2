@@ -82,9 +82,11 @@ export function setupOnboardingListeners() {
   }
 
   const handleClick = (e) => {
+    console.log('🖱️ Click detected on:', e.target);
+
     const target = e.target.closest('#startPhotoCapture');
     if (target) {
-      console.log('Start button clicked via delegation');
+      console.log('✅ Start button clicked - navigating to /products/capture');
       e.preventDefault();
       e.stopPropagation();
       router.navigate('/products/capture');
