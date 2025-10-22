@@ -3,7 +3,40 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+console.log('🔐 Supabase Config Check:', {
+  hasUrl: !!supabaseUrl,
+  hasKey: !!supabaseAnonKey,
+  urlPreview: supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : 'MISSING',
+  keyPreview: supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'MISSING'
+});
+
 if (!supabaseUrl || !supabaseAnonKey) {
+  const errorMsg = `❌ Missing Supabase environment variables!\n` +
+    `URL: ${supabaseUrl ? 'OK' : 'MISSING'}\n` +
+    `Key: ${supabaseAnonKey ? 'OK' : 'MISSING'}\n\n` +
+    `Please configure these in Vercel:\n` +
+    `VITE_SUPABASE_URL=https://jnqynypefthinysddrka.supabase.co\n` +
+    `VITE_SUPABASE_ANON_KEY=eyJhbGci...`;
+
+  console.error(errorMsg);
+
+  // Show user-friendly error
+  if (typeof document !== 'undefined') {
+    document.body.innerHTML = `
+      <div style="padding: 20px; font-family: system-ui; max-width: 600px; margin: 50px auto;">
+        <h1 style="color: #dc2626;">⚠️ Configuração Incompleta</h1>
+        <p>As variáveis de ambiente do Supabase não estão configuradas.</p>
+        <p>Configure no Vercel:</p>
+        <pre style="background: #f3f4f6; padding: 15px; border-radius: 8px; overflow-x: auto;">
+VITE_SUPABASE_URL=https://jnqynypefthinysddrka.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpucXlueXBlZnRoaW55c2RkcmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5ODExOTUsImV4cCI6MjA3NjU1NzE5NX0.WEJk5IiWyJqaaiNh0-jsEL0a5R1ry3hQ1N0U4eBm45k</pre>
+        <p style="margin-top: 20px;">
+          <a href="https://vercel.com" style="color: #0066cc;">→ Abrir Vercel Dashboard</a>
+        </p>
+      </div>
+    `;
+  }
+
   throw new Error('Missing Supabase environment variables');
 }
 
