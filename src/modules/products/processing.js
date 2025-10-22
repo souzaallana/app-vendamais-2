@@ -108,37 +108,64 @@ export async function startProcessing() {
 }
 
 async function callAIAPI(images, operation, mannequinDescription) {
+  const startTime = Date.now();
+  console.log('🚀 callAIAPI started', {
+    imagesCount: images.length,
+    operation,
+    mannequinDescription: mannequinDescription?.substring(0, 50)
+  });
+
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       throw new Error('Not authenticated');
     }
 
-    const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-process-images`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          images: images.slice(0, 3),
-          operation,
-          mannequinDescription,
-        }),
-      }
-    );
+    const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-process-images`;
+    console.log('📡 Calling API:', apiUrl);
+
+    const payload = {
+      images: images.slice(0, 3),
+      operation,
+      mannequinDescription,
+    };
+    console.log('📦 Payload:', {
+      imagesCount: payload.images.length,
+      operation: payload.operation,
+      hasDescription: !!payload.mannequinDescription
+    });
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    console.log('📥 Response status:', response.status);
 
     if (!response.ok) {
-      throw new Error('AI processing failed');
+      const errorText = await response.text();
+      console.error('❌ API Error Response:', errorText);
+      throw new Error(`AI processing failed: ${response.status} - ${errorText}`);
     }
 
     const result = await response.json();
+    const duration = Date.now() - startTime;
+    console.log('✅ API Success:', {
+      duration: `${duration}ms`,
+      resultsCount: result.results?.length,
+      usingRealAPI: result.using_real_api,
+      totalCost: result.total_cost
+    });
+
     return result;
 
   } catch (error) {
-    console.error('AI API Error:', error);
+    const duration = Date.now() - startTime;
+    console.error('❌ AI API Error (after ${duration}ms):', error);
 
     return {
       success: true,
