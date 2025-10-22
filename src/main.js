@@ -58,7 +58,7 @@ async function init() {
 
   router.register('/products/onboarding', async () => {
     const html = renderOnboardingScreen();
-    setTimeout(() => setupOnboardingListeners(), 0);
+    setTimeout(() => setupOnboardingListeners(), 100);
     return html;
   });
 
