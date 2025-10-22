@@ -82,9 +82,19 @@ export async function startProcessing() {
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       if (i === 2) {
+        console.log('🎯 Starting AI processing at step', i);
         const images = photoState.photos.map(p => p.url);
-        const result = await callAIAPI(images, 'all', photoState.mannequinDescription);
-        processingState.results = result;
+        console.log('📸 Images to process:', images.length);
+
+        try {
+          const result = await callAIAPI(images, 'all', photoState.mannequinDescription);
+          console.log('✅ API Result received:', result);
+          processingState.results = result;
+        } catch (apiError) {
+          console.error('❌ API call failed:', apiError);
+          alert(`Erro na API: ${apiError.message}`);
+          throw apiError;
+        }
       }
 
       processingState.steps[i].status = 'completed';
@@ -144,15 +154,23 @@ async function callAIAPI(images, operation, mannequinDescription) {
       body: JSON.stringify(payload),
     });
 
+    const responseText = await response.text();
+    console.log('📥 Raw API response:', responseText.substring(0, 500));
+
     console.log('📥 Response status:', response.status);
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ API Error Response:', errorText);
-      throw new Error(`AI processing failed: ${response.status} - ${errorText}`);
+      console.error('❌ API Error Response:', responseText);
+      throw new Error(`AI processing failed: ${response.status} - ${responseText}`);
     }
 
-    const result = await response.json();
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('❌ Failed to parse response:', parseError);
+      throw new Error(`Invalid API response: ${parseError.message}`);
+    }
     const duration = Date.now() - startTime;
     console.log('✅ API Success:', {
       duration: `${duration}ms`,

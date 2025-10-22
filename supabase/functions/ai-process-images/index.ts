@@ -158,6 +158,8 @@ Deno.serve(async (req: Request) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const nanoBananaApiKey = Deno.env.get('NANO_BANANA_API_KEY') || '';
 
+    console.log('🔑 Nano Banana API Key configured:', nanoBananaApiKey ? `Yes (${nanoBananaApiKey.substring(0, 10)}...)` : 'No');
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const authHeader = req.headers.get('Authorization');
@@ -175,9 +177,17 @@ Deno.serve(async (req: Request) => {
 
     const { images, operation, mannequinDescription, productId }: ProcessImageRequest = await req.json();
 
+    console.log('📥 Request received:', {
+      imagesCount: images?.length,
+      operation,
+      hasDescription: !!mannequinDescription
+    });
+
     const results = [];
     const logs: AILog[] = [];
     const useRealAPI = nanoBananaApiKey.length > 0;
+
+    console.log('🤖 Using Real API:', useRealAPI);
 
     let backgroundRemovedImages: string[] = [];
     let mannequinImages: string[][] = [];
@@ -384,10 +394,38 @@ Deno.serve(async (req: Request) => {
       console.error('Error saving logs:', logError);
     }
 
+    const formattedResults = [];
+
+    const bgResults = results.filter(r => r.type === 'background_removed');
+    if (bgResults.length > 0) {
+      formattedResults.push({
+        type: 'background_removed',
+        urls: bgResults.map(r => r.url)
+      });
+    }
+
+    const mannequinResults = results.filter(r => r.type === 'mannequin');
+    if (mannequinResults.length > 0) {
+      formattedResults.push({
+        type: 'mannequin',
+        urls: mannequinResults.flatMap(r => r.urls || [r.url])
+      });
+    }
+
+    const dataResults = results.filter(r => r.type === 'extracted_data');
+    if (dataResults.length > 0) {
+      formattedResults.push(dataResults[0]);
+    }
+
+    console.log('✅ Formatted results:', {
+      resultsCount: formattedResults.length,
+      types: formattedResults.map(r => r.type)
+    });
+
     return new Response(
       JSON.stringify({
         success: true,
-        results,
+        results: formattedResults,
         total_cost: logs.reduce((sum, log) => sum + log.cost, 0),
         total_duration_ms: logs.reduce((sum, log) => sum + log.duration_ms, 0),
         using_real_api: useRealAPI,
