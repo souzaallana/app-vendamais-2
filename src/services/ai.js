@@ -1,5 +1,5 @@
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const NANO_BANANA_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const NANO_BANANA_API_URL = 'https://api.nanobanana.dev/v1/chat/completions';
 
 async function fileToBase64(file) {
   return new Promise((resolve, reject) => {
@@ -14,17 +14,17 @@ async function fileToBase64(file) {
 }
 
 export async function analyzeProductImages(photos) {
-  if (!GEMINI_API_KEY || GEMINI_API_KEY === '') {
-    console.warn('Gemini API key not configured, using mock data');
+  if (!NANO_BANANA_API_KEY || NANO_BANANA_API_KEY === '') {
+    console.warn('Nano Banana API key not configured, using mock data');
     return getMockProductData();
   }
 
   try {
-    const imageParts = await Promise.all(
+    const imageUrls = await Promise.all(
       photos.map(async (photo) => ({
-        inlineData: {
-          mimeType: 'image/jpeg',
-          data: await fileToBase64(photo.file)
+        type: 'image_url',
+        image_url: {
+          url: `data:image/jpeg;base64,${await fileToBase64(photo.file)}`
         }
       }))
     );
@@ -39,31 +39,34 @@ export async function analyzeProductImages(photos) {
 
 Seja profissional, preciso e focado em vendas. Use linguagem atraente para e-commerce.`;
 
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(NANO_BANANA_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${NANO_BANANA_API_KEY}`,
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: prompt },
-            ...imageParts
-          ]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1024,
-        }
+        model: 'gemini-2.0-flash-exp',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: prompt },
+              ...imageUrls
+            ]
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 1024,
       })
     });
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`);
+      throw new Error(`Nano Banana API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const text = data.candidates[0].content.parts[0].text;
+    const text = data.choices[0].message.content;
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
