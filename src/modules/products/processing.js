@@ -11,7 +11,8 @@ const processingState = {
     { key: 'optimize_marketplace', status: 'pending' }
   ],
   estimatedTime: 25,
-  results: null
+  results: null,
+  isProcessing: false
 };
 
 export function getProcessingState() {
@@ -49,6 +50,14 @@ export function renderProcessingScreen() {
 }
 
 export async function startProcessing() {
+  console.log('startProcessing called, isProcessing:', processingState.isProcessing);
+
+  // Prevent multiple simultaneous processing
+  if (processingState.isProcessing) {
+    console.log('Already processing, skipping...');
+    return;
+  }
+
   const photoState = getPhotoState();
 
   if (photoState.photos.length === 0) {
@@ -56,15 +65,19 @@ export async function startProcessing() {
     return;
   }
 
+  processingState.isProcessing = true;
   processingState.steps.forEach(step => step.status = 'pending');
   processingState.steps[0].status = 'active';
-
-  navigateTo('/products/processing');
 
   try {
     for (let i = 0; i < processingState.steps.length; i++) {
       processingState.steps[i].status = 'active';
-      navigateTo('/products/processing');
+
+      // Update UI without navigating
+      const app = document.getElementById('app');
+      if (app) {
+        app.innerHTML = renderProcessingScreen();
+      }
 
       await new Promise(resolve => setTimeout(resolve, 1500));
 
@@ -75,14 +88,20 @@ export async function startProcessing() {
       }
 
       processingState.steps[i].status = 'completed';
-      navigateTo('/products/processing');
+
+      // Update UI without navigating
+      if (app) {
+        app.innerHTML = renderProcessingScreen();
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 500));
+    processingState.isProcessing = false;
     navigateTo('/products/image-selection');
 
   } catch (error) {
     console.error('Processing error:', error);
+    processingState.isProcessing = false;
     alert(i18n.t('processing_error'));
     navigateTo('/products/capture');
   }
