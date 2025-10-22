@@ -107,9 +107,12 @@ async function init() {
   });
 
   try {
+    console.log('🔍 Checking current user...');
     const user = await authService.getCurrentUser();
+    console.log('✅ User check complete:', user ? `Logged in as ${user.email}` : 'Not logged in');
 
     setTimeout(() => {
+      hideSplashScreen();
       if (user) {
         router.navigate('/home');
       } else {
@@ -117,10 +120,27 @@ async function init() {
       }
     }, 1500);
   } catch (error) {
+    console.warn('⚠️ Auth check failed, redirecting to login:', error.message);
     setTimeout(() => {
+      hideSplashScreen();
       router.navigate('/login');
     }, 1500);
   }
 }
 
-init();
+// Wrap init in try-catch for safety
+try {
+  init();
+} catch (error) {
+  console.error('❌ Fatal error during init:', error);
+  document.getElementById('app').innerHTML = `
+    <div style="padding: 20px; font-family: system-ui; max-width: 600px; margin: 50px auto;">
+      <h1 style="color: #dc2626;">⚠️ Erro ao carregar aplicativo</h1>
+      <p>Ocorreu um erro ao inicializar o aplicativo.</p>
+      <p style="color: #666; font-size: 14px; margin-top: 20px;">${error.message}</p>
+      <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #0066cc; color: white; border: none; border-radius: 6px; cursor: pointer;">
+        Recarregar
+      </button>
+    </div>
+  `;
+}
