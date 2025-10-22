@@ -130,14 +130,24 @@ let currentSlotType = 'outros';
 export function setupPhotoCaptureListeners() {
   console.log('Setting up photo capture listeners');
 
-  const app = document.getElementById('app');
+  // Wait for DOM to be fully ready
+  requestAnimationFrame(() => {
+    const app = document.getElementById('app');
 
-  if (!app) {
-    console.error('App element not found');
-    return;
-  }
+    if (!app) {
+      console.error('App element not found');
+      return;
+    }
 
-  const handleClick = (e) => {
+    // Verify inputs exist
+    const cameraInput = document.getElementById('fileInputCamera');
+    const galleryInput = document.getElementById('fileInputGallery');
+    console.log('Inputs found on setup:', {
+      camera: !!cameraInput,
+      gallery: !!galleryInput
+    });
+
+    const handleClick = (e) => {
     if (e.target.closest('#backFromCapture')) {
       console.log('Back button clicked');
       e.preventDefault();
@@ -285,26 +295,27 @@ export function setupPhotoCaptureListeners() {
     e.target.value = '';
   };
 
-  app.addEventListener('click', handleClick);
-  app.addEventListener('input', handleInput);
+    app.addEventListener('click', handleClick);
+    app.addEventListener('input', handleInput);
 
-  // Attach file input listeners directly
-  const fileInputCamera = document.getElementById('fileInputCamera');
-  const fileInputGallery = document.getElementById('fileInputGallery');
+    // Attach file input listeners directly
+    const fileInputCamera = document.getElementById('fileInputCamera');
+    const fileInputGallery = document.getElementById('fileInputGallery');
 
-  if (fileInputCamera) {
-    console.log('Attaching camera input listener');
-    fileInputCamera.addEventListener('change', handleFileChange);
-  } else {
-    console.warn('Camera input not found during setup');
-  }
+    if (fileInputCamera) {
+      console.log('Attaching camera input listener');
+      fileInputCamera.addEventListener('change', handleFileChange);
+    } else {
+      console.warn('Camera input not found during setup');
+    }
 
-  if (fileInputGallery) {
-    console.log('Attaching gallery input listener');
-    fileInputGallery.addEventListener('change', handleFileChange);
-  } else {
-    console.warn('Gallery input not found during setup');
-  }
+    if (fileInputGallery) {
+      console.log('Attaching gallery input listener');
+      fileInputGallery.addEventListener('change', handleFileChange);
+    } else {
+      console.warn('Gallery input not found during setup');
+    }
 
-  console.log('Photo capture listeners set up');
+    console.log('Photo capture listeners set up');
+  });
 }
