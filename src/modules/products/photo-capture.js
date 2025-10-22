@@ -131,8 +131,6 @@ export function setupPhotoCaptureListeners() {
   console.log('Setting up photo capture listeners');
 
   const app = document.getElementById('app');
-  const fileInputCamera = document.getElementById('fileInputCamera');
-  const fileInputGallery = document.getElementById('fileInputGallery');
 
   if (!app) {
     console.error('App element not found');
@@ -167,7 +165,13 @@ export function setupPhotoCaptureListeners() {
       console.log('Open camera clicked');
       e.preventDefault();
       currentSlotType = 'outros';
-      fileInputCamera?.click();
+      const fileInputCamera = document.getElementById('fileInputCamera');
+      console.log('Camera input element:', fileInputCamera);
+      if (fileInputCamera) {
+        fileInputCamera.click();
+      } else {
+        console.error('Camera input not found!');
+      }
       return;
     }
 
@@ -175,14 +179,23 @@ export function setupPhotoCaptureListeners() {
       console.log('Open gallery clicked');
       e.preventDefault();
       currentSlotType = 'outros';
-      fileInputGallery?.click();
+      const fileInputGallery = document.getElementById('fileInputGallery');
+      console.log('Gallery input element:', fileInputGallery);
+      if (fileInputGallery) {
+        fileInputGallery.click();
+      } else {
+        console.error('Gallery input not found!');
+      }
       return;
     }
 
     if (e.target.closest('#uploadBtn')) {
       console.log('Upload button clicked');
       e.preventDefault();
-      fileInputGallery?.click();
+      const fileInputGallery = document.getElementById('fileInputGallery');
+      if (fileInputGallery) {
+        fileInputGallery.click();
+      }
       return;
     }
 
@@ -205,7 +218,10 @@ export function setupPhotoCaptureListeners() {
       if (!existingPhoto) {
         console.log('Photo slot clicked:', type);
         currentSlotType = type;
-        fileInputCamera?.click();
+        const fileInputCamera = document.getElementById('fileInputCamera');
+        if (fileInputCamera) {
+          fileInputCamera.click();
+        }
       }
       return;
     }
@@ -236,7 +252,7 @@ export function setupPhotoCaptureListeners() {
   };
 
   const handleFileChange = (e) => {
-    console.log('File input changed');
+    console.log('File input changed, files:', e.target.files.length);
     const files = Array.from(e.target.files);
 
     files.forEach(file => {
@@ -272,12 +288,22 @@ export function setupPhotoCaptureListeners() {
   app.addEventListener('click', handleClick);
   app.addEventListener('input', handleInput);
 
+  // Attach file input listeners directly
+  const fileInputCamera = document.getElementById('fileInputCamera');
+  const fileInputGallery = document.getElementById('fileInputGallery');
+
   if (fileInputCamera) {
+    console.log('Attaching camera input listener');
     fileInputCamera.addEventListener('change', handleFileChange);
+  } else {
+    console.warn('Camera input not found during setup');
   }
 
   if (fileInputGallery) {
+    console.log('Attaching gallery input listener');
     fileInputGallery.addEventListener('change', handleFileChange);
+  } else {
+    console.warn('Gallery input not found during setup');
   }
 
   console.log('Photo capture listeners set up');
